@@ -30,6 +30,8 @@ exports.handler = async (event, context) => {
     await cookieJar.setCookie('birthtime=946652401; Path=/; Domain=.steamcommunity.com', steamUrl);
     await cookieJar.setCookie('lastagecheckage=1-January-2000; Path=/; Domain=.steamcommunity.com', steamUrl);
     await cookieJar.setCookie('wants_mature_content=1; Path=/; Domain=.steamcommunity.com', steamUrl);
+    await cookieJar.setCookie(`wants_mature_content_apps=${gameId}; Path=/; Domain=.steamcommunity.com`, steamUrl);
+    await cookieJar.setCookie(`recentlyVisitedAppHubs=${gameId}; Path=/; Domain=.steamcommunity.com`, steamUrl);
 
     let response = await client.get(steamUrl);
     let html = response.data;
@@ -40,17 +42,21 @@ exports.handler = async (event, context) => {
 
     const activeUserRegex = /<span class="apphub_NumInApp">([\s\S]*?)<\/span>/;
     const activeUserMatch = html.match(activeUserRegex);
+    let activeUserCount;
     if (!activeUserMatch || !activeUserMatch[1]) {
-      throw new Error("No user found");
+      activeUserCount = 0;
+    } else {
+      activeUserCount = parseInt(activeUserMatch[1].trim().replace(" In-Game", "").replace(/,/g, ""), 10);
     }
-    const activeUserCount = parseInt(activeUserMatch[1].trim().replace(" In-Game", "").replace(/,/g, ""), 10);
-
+    
     const activeChatRegex = /<span class="apphub_Chat apphub_ResponsiveMenuItem">([\s\S]*?)<a href/;
     const activeChatMatch = html.match(activeChatRegex);
+    let activeChatCount;
     if (!activeChatMatch || !activeChatMatch[1]) {
-      throw new Error("No chat found");
+      activeChatCount = 0;
+    } else {
+      activeChatCount = parseInt(activeChatMatch[1].trim().replace(" in", "").replace(/,/g, ""), 10);
     }
-    const activeChatCount = parseInt(activeChatMatch[1].trim().replace(" in", "").replace(/,/g, ""), 10);
 
     return {
       statusCode: 200,
