@@ -57,11 +57,23 @@ exports.handler = async (event, context) => {
 
     const anchorMatches = Array.from(tagsHtml.matchAll(anchorContentRegex), match => match[1].trim());
 
+    const extractSeries = (html) => {
+      const seriesRegex = /<div[^>]*class="dev_row"[^>]*>\s*<b>シリーズ:<\/b>\s*<a[^>]*>([^<]+)<\/a>\s*<\/div>/i;
+      const match = html.match(seriesRegex);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+      return "";
+    };
+
+    const series = extractSeries(html);
+
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        tags: anchorMatches
+        tags: anchorMatches,
+        series: series
       }),
     };
   } catch (error) {
